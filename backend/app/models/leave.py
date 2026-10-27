@@ -1,0 +1,42 @@
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.database import Base  # Change this to the file where your Base is defined
+
+import enum
+from datetime import date, datetime
+
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+# Keep the Base import that works for LeaveBalance and LeavePolicy.
+
+
+class LeaveStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+
+class LeavePolicy(Base):
+    __tablename__ = "leave_policies"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    leave_type: Mapped[str] = mapped_column(String(40), unique=True, nullable=False)
+    total_days_allowed: Mapped[int] = mapped_column(Integer, nullable=False)
+    active: Mapped[bool] = mapped_column(default=True, nullable=False)
+
+
+class LeaveBalance(Base):
+    __tablename__ = "leave_balances"
+    __table_args__ = (
+        UniqueConstraint("employee_id", "leave_type", name="uq_balance_employee_type"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    employee_id: Mapped[int] = mapped_column(
+        ForeignKey("employees.id"), nullable=False, index=True
+    )
+    leave_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    remaining_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
